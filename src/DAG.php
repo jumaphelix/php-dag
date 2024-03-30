@@ -69,4 +69,34 @@ class DAG {
         return $sortedOrder;
     }
 
+    /**
+     * @return string
+     */
+    public function visualize() {
+
+        $sortedTasks = $this->topologicalSort();
+
+        $representation = "Graphical Representation of DAG Tasks and Dependencies\n";
+        $representation .= "----------------------------------------\n";
+
+        foreach ($sortedTasks as $taskId) {
+
+            $task = $this->getTask($taskId);
+
+            $children = $this->getChildren($taskId);
+
+            if (empty($children)) {
+                $representation .= "{$taskId} [No children]\n";
+            } else {
+                $representation .= "{$taskId} -> (" . implode(', ', $children) . ")\n";
+            }
+        }
+
+        $representation .= "----------------------------------------\n";
+        $representation .= "Topological Order of Execution: \n";
+        $representation .= implode(' -> ', $sortedTasks) . "\n";
+
+        return $representation;
+    }
+
 }

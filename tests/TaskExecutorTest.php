@@ -146,6 +146,9 @@ class TaskExecutorTest extends TestCase {
         $dag->addParent('A', 'D');
         $dag->addParent('B', 'C');
 
+        print "\nVisualize Tasks\n";
+        print_r($dag->visualize());
+
         // Initialize the task executor
         $executor = new TaskExecutor($dag);
 

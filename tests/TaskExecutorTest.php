@@ -144,7 +144,7 @@ class TaskExecutorTest extends TestCase {
 
         // Define dependencies (C, D, E, A, B)
         $dag->addParent('A', 'D');
-        $dag->addParent('B', 'C');
+        $dag->addParent('B', 'D');
 
         print "\nVisualize Tasks\n";
         print_r($dag->visualize());
@@ -177,6 +177,7 @@ class TaskExecutorTest extends TestCase {
 
         print "\nShared Data\n";
         print_r($dataManager->getData());
+        //print_r($executor->getTaskResults());
 
         print "\nAll tasks completed in {$executor->getExecutionTime()} seconds \n";
 

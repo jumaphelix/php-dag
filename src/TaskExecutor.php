@@ -2,9 +2,8 @@
 
 namespace JumaPhelix\DAG;
 
-use Swoole\Coroutine\Channel;
+use Swoole\Table;
 use Swoole\Coroutine;
-use Swoole\Lock;
 
 class TaskExecutor {
 
@@ -14,12 +13,26 @@ class TaskExecutor {
      * @var Task[]
      */
     private array|null $results = [];
-    private $channels = [];
+    private $taskResultsTable;
     private $startTime;
     private $endTime;
+    private $taskResults = [];
 
     public function __construct(DAG $dag) {
         $this->dag = $dag;
+        $this->initializeResultsTable();
+    }
+
+    /**
+     * @return void
+     */
+    private function initializeResultsTable() {
+
+        // We create a table with 2 columns: one for holding task result and the other for holding data shared by all tasks
+        $this->taskResultsTable = new Table(1024);
+        $this->taskResultsTable->column('result', Table::TYPE_STRING, 20480);
+        $this->taskResultsTable->create();
+
     }
 
     public function execute() {
@@ -29,11 +42,6 @@ class TaskExecutor {
         Coroutine\run(function () {
 
             $sortedTasks = $this->dag->topologicalSort();
-
-            // Initialize a channel for each task to synchronize execution and manage results
-            foreach ($sortedTasks as $taskId) {
-                $this->channels[$taskId] = new Channel(1);
-            }
 
             foreach ($sortedTasks as $taskId) {
 
@@ -52,8 +60,12 @@ class TaskExecutor {
 
                     $parentResults = [];
                     foreach ($parents as $parentId) {
+
                         // Wait for the parent task to complete and get its result
-                        $parentResults[$parentId] = $this->channels[$parentId]->pop();
+                        $parentResultSerialized = $this->taskResultsTable->get($parentId, 'result');
+                        if ($parentResultSerialized !== false) {
+                            $parentResults[$parentId] = unserialize($parentResultSerialized);
+                        }
                     }
 
                     // Execute the task, potentially using results from parent tasks
@@ -82,8 +94,8 @@ class TaskExecutor {
                     // Set the task result
                     $task->setResult($result);
 
-                    // Make the result available for this task's children
-                    $this->channels[$taskId]->push($result);
+                    // Store result in the Swoole Table
+                    $this->taskResultsTable->set($taskId, ['result' => serialize($result)]);
 
                     $this->results[] = $task;
 
@@ -91,10 +103,8 @@ class TaskExecutor {
             }
         });
 
-        // Close channels after all tasks have completed
-        foreach ($this->channels as $channel) {
-            $channel->close();
-        }
+        // We clean the Swoole table
+        $this->cleanAndGetResults();
 
         $this->endTime = microtime(true);
     }
@@ -115,6 +125,23 @@ class TaskExecutor {
         $lastKey = key(array_slice($this->results, -1, 1, true));
 
         return $this->results[$lastKey] ?? null;
+    }
+
+    private function cleanAndGetResults() {
+
+        // Iterate over the Swoole Table to collect results
+        foreach ($this->taskResultsTable as $taskId => $row) {
+            // Unserialize the result before adding it to the results array
+            $result = unserialize($row['result']);
+            $this->taskResults[$taskId] = $result;
+        }
+
+        // Clean the table if no longer needed
+        unset($this->taskResultsTable);
+    }
+
+    public function getTaskResults() {
+        return $this->taskResults;
     }
 
     /**

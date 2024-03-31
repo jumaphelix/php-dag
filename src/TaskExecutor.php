@@ -59,13 +59,24 @@ class TaskExecutor {
                 Coroutine::create(function () use ($task, $parents, $taskId) {
 
                     $parentResults = [];
+
                     foreach ($parents as $parentId) {
 
-                        // Wait for the parent task to complete and get its result
-                        $parentResultSerialized = $this->taskResultsTable->get($parentId, 'result');
-                        if ($parentResultSerialized !== false) {
-                            $parentResults[$parentId] = unserialize($parentResultSerialized);
+                        $parentResultSerialized = false;
+
+                        // Loop to wait for the parent task to complete and get its result
+                        while ($parentResultSerialized === false) {
+
+                            $parentResultSerialized = $this->taskResultsTable->get($parentId, 'result');
+
+                            if ($parentResultSerialized !== false) {
+                                $parentResults[$parentId] = unserialize($parentResultSerialized);
+                            } else {
+                                // Implement a short delay to prevent a busy wait loop
+                                Coroutine::sleep(0.001); // Sleep for 1 millisecond
+                            }
                         }
+
                     }
 
                     // Execute the task, potentially using results from parent tasks

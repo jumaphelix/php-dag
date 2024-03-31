@@ -2,9 +2,6 @@
 
 namespace JumaPhelix\DAG;
 
-use Swoole\Table;
-use Swoole\Coroutine;
-
 class TaskExecutor {
 
     private $dag;
@@ -29,8 +26,8 @@ class TaskExecutor {
     private function initializeResultsTable() {
 
         // We create a table with 2 columns: one for holding task result and the other for holding data shared by all tasks
-        $this->taskResultsTable = new Table(1024);
-        $this->taskResultsTable->column('result', Table::TYPE_STRING, 20480);
+        $this->taskResultsTable = new \Swoole\Table(1024);
+        $this->taskResultsTable->column('result', \Swoole\Table::TYPE_STRING, 20480);
         $this->taskResultsTable->create();
 
     }
@@ -39,7 +36,7 @@ class TaskExecutor {
 
         $this->startTime = microtime(true);
 
-        Coroutine\run(function () {
+        \Swoole\Coroutine\run(function () {
 
             $sortedTasks = $this->dag->topologicalSort();
 
@@ -56,7 +53,7 @@ class TaskExecutor {
                     return in_array($taskId, $children);
                 }));
 
-                Coroutine::create(function () use ($task, $parents, $taskId) {
+                \Swoole\Coroutine::create(function () use ($task, $parents, $taskId) {
 
                     $parentResults = [];
                     foreach ($parents as $parentId) {

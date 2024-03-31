@@ -10,7 +10,7 @@ class SharedDataManager {
     private $data;
 
     public function __construct(&$data) {
-        $this->lock = new Lock(SWOOLE_MUTEX);
+        $this->lock = new \Swoole\Lock(SWOOLE_MUTEX);
         $this->data = &$data;
     }
 

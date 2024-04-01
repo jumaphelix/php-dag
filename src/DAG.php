@@ -63,7 +63,11 @@ class DAG {
         }
 
         if (count($sortedOrder) != count($this->tasks)) {
-            throw new \RuntimeException("Detected a cycle in the DAG");
+            // Detected a cycle. We find the cycle and display it
+
+            $cycle = $this->findFirstCycle();
+
+            throw new \RuntimeException("Detected a cycle in the DAG: ".$cycle);
         }
 
         return $sortedOrder;
@@ -97,6 +101,92 @@ class DAG {
         $representation .= implode(' -> ', $sortedTasks) . "\n";
 
         return $representation;
+    }
+
+    /**
+     * @return string
+     */
+    public function findFirstCycle() {
+
+        $visited = [];
+        $recStack = [];
+        $parentInfo = []; // To track the path for backtracking
+
+        foreach ($this->tasks as $task) {
+            if (!isset($visited[$task->getId()]) && $this->dfsFindCycle($task->getId(), $visited, $recStack, $parentInfo)) {
+                // Cycle found, backtrack to get the cycle path
+                $cyclePath = $this->backtrackCyclePath($task->getId(), $parentInfo);
+                return $this->formatCycleMessage($cyclePath)." Summary ".json_encode($parentInfo);
+            }
+        }
+
+        return "No cycle detected in the DAG.";
+    }
+
+    /**
+     * @param $taskId
+     * @param $visited
+     * @param $recStack
+     * @param $parentInfo
+     * @return bool
+     */
+    private function dfsFindCycle($taskId, &$visited, &$recStack, &$parentInfo) {
+
+        $visited[$taskId] = true;
+        $recStack[$taskId] = true;
+
+        foreach ($this->getChildren($taskId) as $childId) {
+            if (!isset($visited[$childId])) {
+                $parentInfo[$childId] = $taskId; // Track the parent
+                if ($this->dfsFindCycle($childId, $visited, $recStack, $parentInfo)) return true;
+            } elseif (isset($recStack[$childId]) && $recStack[$childId]) {
+                // Cycle detected
+                $parentInfo[$childId] = $taskId; // Include the last link of the cycle
+                return true;
+            }
+        }
+
+        $recStack[$taskId] = false;
+        return false;
+    }
+
+    /**
+     * @param $startId
+     * @param $parentInfo
+     * @return array
+     */
+    private function backtrackCyclePath($startId, $parentInfo) {
+        $path = [];
+        $currentId = $startId;
+
+        // Start backtracking from the starting node
+        while (isset($parentInfo[$currentId])) {
+            $path[] = $currentId;
+            $currentId = $parentInfo[$currentId];
+
+            // Stop if we have completed the cycle
+            if ($currentId == $startId) {
+                break;
+            }
+        }
+
+        // Add the starting node to close the cycle
+        $path[] = $startId;
+        return $path;
+    }
+
+    /**
+     * @param $cyclePath
+     * @return string
+     */
+    private function formatCycleMessage($cyclePath) {
+        $messageParts = [];
+        foreach ($cyclePath as $index => $taskId) {
+            if (isset($cyclePath[$index + 1])) {
+                $messageParts[] = "Task {$taskId} depends on Task {$cyclePath[$index + 1]}";
+            }
+        }
+        return implode(", but also ", $messageParts) . ".";
     }
 
 }

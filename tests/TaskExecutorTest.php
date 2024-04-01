@@ -144,7 +144,8 @@ class TaskExecutorTest extends TestCase {
 
         // Define dependencies (C, D, E, A, B)
         $dag->addParent('A', 'D');
-        $dag->addParent('B', 'D');
+        $dag->addParent('D', 'C');
+        $dag->addParent('C', 'A');
 
         print "\nVisualize Tasks\n";
         print_r($dag->visualize());

@@ -62,12 +62,14 @@ class DAG {
             }
         }
 
-        if (count($sortedOrder) != count($this->tasks)) {
-            // Detected a cycle. We find the cycle and display it
+        $noSorted = count($sortedOrder);
+        $noTasks = count($this->tasks);
 
+        if ($noSorted != $noTasks) {
+            // Get the cycle
             $cycle = $this->findFirstCycle();
-
-            throw new \RuntimeException("Detected a cycle in the DAG: ".$cycle);
+            // throw as error
+            throw new \RuntimeException("Detected a cycle in the DAG. $noTasks tasks but only $noSorted sorted tasks: ".$cycle);
         }
 
         return $sortedOrder;
@@ -78,30 +80,43 @@ class DAG {
      */
     public function visualize() {
 
-        $sortedTasks = $this->topologicalSort();
-
         $representation = "Graphical Representation of DAG Tasks and Dependencies\n";
         $representation .= "----------------------------------------\n";
 
-        foreach ($sortedTasks as $taskId) {
+        $visited = []; // Track visited tasks to avoid cyclic loop in visualization
 
-            $task = $this->getTask($taskId);
+        try {
 
-            $children = $this->getChildren($taskId);
+            $sortedTasks = $this->topologicalSort();
 
-            if (empty($children)) {
-                $representation .= "{$taskId} [No children]\n";
-            } else {
-                $representation .= "{$taskId} -> (" . implode(', ', $children) . ")\n";
+            foreach ($sortedTasks as $taskId) {
+
+                // Check if this task has already been visited
+                if (isset($visited[$taskId])) continue; // Skip this task to prevent cyclic loop
+
+                $children = $this->getChildren($taskId);
+
+                $visited[$taskId] = true; // Mark this task as visited
+
+                if (empty($children)) {
+                    $representation .= "{$taskId} [No children]\n";
+                } else {
+                    $representation .= "{$taskId} -> (" . implode(', ', $children) . ")\n";
+                }
             }
+        } catch (\RuntimeException $e) {
+            $representation .= "Cycle Detected\n";
         }
 
         $representation .= "----------------------------------------\n";
-        $representation .= "Topological Order of Execution: \n";
-        $representation .= implode(' -> ', $sortedTasks) . "\n";
+        if (isset($sortedTasks)) {
+            $representation .= "Topological Order of Execution (partial due to cycle): \n";
+            $representation .= implode(' -> ', $sortedTasks) . "\n";
+        }
 
         return $representation;
     }
+
 
     /**
      * @return string
@@ -116,10 +131,9 @@ class DAG {
             if (!isset($visited[$task->getId()]) && $this->dfsFindCycle($task->getId(), $visited, $recStack, $parentInfo)) {
                 // Cycle found, backtrack to get the cycle path
                 $cyclePath = $this->backtrackCyclePath($task->getId(), $parentInfo);
-                return $this->formatCycleMessage($cyclePath)." Summary ".json_encode($parentInfo). ". Visualization is:\n".$this->visualize();
+                return $this->formatCycleMessage($cyclePath)." Summary ".json_encode($parentInfo);
             }
         }
-
         return "No cycle detected in the DAG.";
     }
 

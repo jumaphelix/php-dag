@@ -116,7 +116,7 @@ class DAG {
             if (!isset($visited[$task->getId()]) && $this->dfsFindCycle($task->getId(), $visited, $recStack, $parentInfo)) {
                 // Cycle found, backtrack to get the cycle path
                 $cyclePath = $this->backtrackCyclePath($task->getId(), $parentInfo);
-                return $this->formatCycleMessage($cyclePath)." Summary ".json_encode($parentInfo);
+                return $this->formatCycleMessage($cyclePath)." Summary ".json_encode($parentInfo). ". Visualization is:\n".$this->visualize();
             }
         }
 

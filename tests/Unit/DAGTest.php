@@ -38,8 +38,8 @@ class DAGTest extends TestCase {
         // Perform a topological sort and test the order
         $sortedTasks = $dag->topologicalSort();
 
-        print "\nSorted Tasks\n";
-        print_r($sortedTasks);
+        //print "\nSorted Tasks\n";
+        //print_r($sortedTasks);
 
         $expectedOrder = ['C', 'D', 'A', 'B']; // One possible valid order
 

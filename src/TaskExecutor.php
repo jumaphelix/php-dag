@@ -30,7 +30,7 @@ class TaskExecutor {
 
         // We create a table with 2 columns: one for holding task result and the other for holding data shared by all tasks
         $this->taskResultsTable = new Table(1024);
-        $this->taskResultsTable->column('result', Table::TYPE_STRING, 20480);
+        $this->taskResultsTable->column('result', Table::TYPE_STRING, 20480000);
         $this->taskResultsTable->create();
 
     }

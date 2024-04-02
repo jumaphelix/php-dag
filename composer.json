@@ -5,10 +5,7 @@
   "license": "MIT",
   "require": {
     "php": "^7.4 || ^8.0",
-    "ext-swoole": "*",
-    "graphp/graph": "^0.9.3",
-    "graphp/algorithms": "^0.8.2",
-    "graphp/graphviz": "^0.2.2"
+    "ext-swoole": "*"
   },
   "scripts": {
     "test": "vendor/bin/phpunit"

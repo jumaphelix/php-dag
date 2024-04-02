@@ -69,7 +69,7 @@ class DAG {
             // Get the cycle
             $cycle = $this->findFirstCycle();
             // throw as error
-            throw new \RuntimeException("Detected a cycle in the DAG. $noTasks tasks but only $noSorted sorted tasks: ".$cycle. ". All Tasks: ".json_encode($this->tasks).". Sorted tasks: ".json_encode($sortedOrder));
+            throw new \RuntimeException("Detected a cycle in the DAG. $noTasks tasks but only $noSorted sorted tasks. In Degrees: ".json_encode($inDegree).". ".$cycle);
         }
 
         return $sortedOrder;

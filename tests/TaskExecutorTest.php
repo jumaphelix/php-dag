@@ -28,7 +28,7 @@ class TaskExecutorTest extends TestCase {
 
     public function testTaskExecutionTime() {
 
-        $data = [];
+        $data["message"] = "";
 
         // Set up the tasks as DAG
         $dag = new DAG();
@@ -41,10 +41,11 @@ class TaskExecutorTest extends TestCase {
 
             $result = self::taskA($parentResults, ...$args);
 
+            //$data["message"] .= "\n".$result;
             // Modify the shared data in a lock-safe way
-            $dataManager->modifyData(function($data) use($result) {
-                $data['A'] = $result;
-                return $data;
+            $dataManager->modifyData(function($param) use($result) {
+                $param["message"] .= "\n".$result;
+                return $param;
             });
 
             return $result;
@@ -63,10 +64,11 @@ class TaskExecutorTest extends TestCase {
             }
             $message .= "Task B completed in 2 seconds";
 
+            //$data["message"] .= "\n".$message;
             // Modify the shared data in a lock-safe way
-            $dataManager->modifyData(function($data) use($message) {
-                $data['B'] = $message;
-                return $data;
+            $dataManager->modifyData(function($param) use($message) {
+                $param["message"] .= "\n".$message;
+                return $param;
             });
 
             return $message;
@@ -84,10 +86,11 @@ class TaskExecutorTest extends TestCase {
             }
             $message .= "Task C completed in 1 second";
 
+            //$data["message"] .= "\n".$message;
             // Modify the shared data in a lock-safe way
-            $dataManager->modifyData(function($data) use($message) {
-                $data['C'] = $message;
-                return $data;
+            $dataManager->modifyData(function($param) use($message) {
+                $param["message"] .= "\n".$message;
+                return $param;
             });
 
             return $message;
@@ -105,10 +108,12 @@ class TaskExecutorTest extends TestCase {
             }
             $message .= "Task D completed in 3 seconds";
 
+            //$data["message"] .= "\n".$message;
+
             // Modify the shared data in a lock-safe way
-            $dataManager->modifyData(function($data) use($message) {
-                $data['D'] = $message;
-                return $data;
+            $dataManager->modifyData(function($param) use($message) {
+                $param["message"] .= "\n".$message;
+                return $param;
             });
 
             return $message;
@@ -126,10 +131,11 @@ class TaskExecutorTest extends TestCase {
             }
             $message .= "Task E completed in 3 seconds";
 
+            //$data["message"] .= "\n".$message;
             // Modify the shared data in a lock-safe way
-            $dataManager->modifyData(function($data) use($message) {
-                $data['E'] = $message;
-                return $data;
+            $dataManager->modifyData(function($param) use($message) {
+                $param["message"] .= "\n".$message;
+                return $param;
             });
 
             return $message;
@@ -145,7 +151,7 @@ class TaskExecutorTest extends TestCase {
         // Define dependencies (C, D, E, A, B)
         $dag->addParent('A', 'D');
         $dag->addParent('D', 'C');
-        $dag->addParent('C', 'A');
+        //$dag->addParent('C', 'A');
 
         //print "\nVisualize Tasks\n";
         //print_r($dag->visualize());
@@ -163,21 +169,21 @@ class TaskExecutorTest extends TestCase {
         $lastResult = $executor->getFinalResult();
 
         //print "\nAll Results\n";
-        foreach ($allResults as $result) {
-            $message = "Task {$result->getId()} status is {$result->getStatus()}. Executed in {$result->getExecutionTime()} seconds.";
-            if ($result->getStatus() == TaskStatus::FAILED) {
-                $message .= " Error says {$result->getException()}.";
-            } elseif ($result->getStatus() == TaskStatus::COMPLETED) {
-                $message .= " Response is ".json_encode($result->getResult());
-            }
-            print "\n$message\n";
-        }
+//        foreach ($allResults as $result) {
+//            $message = "Task {$result->getId()} status is {$result->getStatus()}. Executed in {$result->getExecutionTime()} seconds.";
+//            if ($result->getStatus() == TaskStatus::FAILED) {
+//                $message .= " Error says {$result->getException()}.";
+//            } elseif ($result->getStatus() == TaskStatus::COMPLETED) {
+//                $message .= " Response is ".json_encode($result->getResult());
+//            }
+//            print "\n$message\n";
+//        }
 
         print "\nFinal Result\n";
         print_r($lastResult->getExecutionTime());
 
         print "\nShared Data\n";
-        print_r($dataManager->getData());
+        print_r($data);
         //print_r($executor->getTaskResults());
 
         print "\nAll tasks completed in {$executor->getExecutionTime()} seconds \n";
@@ -240,7 +246,7 @@ class TaskExecutorTest extends TestCase {
         print_r($lastResult->getException());
 
         print "\nShared Data\n";
-        print_r($dataManager->getData());
+        print_r($data);
 
         print "\nAll tasks completed in {$executor->getExecutionTime()} seconds \n";
 

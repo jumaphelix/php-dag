@@ -29,7 +29,12 @@ class SharedDataManager {
 
     }
 
-    public function getData() {
+    /**
+     * Get the data by reference
+     *
+     * @return mixed
+     */
+    public function &getData() {
         return $this->data;
     }
 }

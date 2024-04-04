@@ -110,7 +110,7 @@ class DAG {
 
         $representation .= "----------------------------------------\n";
         if (isset($sortedTasks)) {
-            $representation .= "Topological Order of Execution (partial due to cycle): \n";
+            $representation .= "Topological Order of Execution: \n";
             $representation .= implode(' -> ', $sortedTasks) . "\n";
         }
 

@@ -41,6 +41,10 @@ class TaskExecutor {
 
         Coroutine\run(function () {
 
+            // A wait group to ensure we only return result after all tasks have completed
+            $wg = new Coroutine\WaitGroup();
+
+            // Get the sorted tasks
             $sortedTasks = $this->dag->topologicalSort();
 
             foreach ($sortedTasks as $taskId) {
@@ -56,7 +60,11 @@ class TaskExecutor {
                     return in_array($taskId, $children);
                 }));
 
-                Coroutine::create(function () use ($task, $parents, $taskId) {
+                // Add to wait group
+                $wg->add();
+
+                // Create a coroutine
+                Coroutine::create(function () use ($task, $parents, $taskId, $wg) {
 
                     $parentResults = [];
 
@@ -110,14 +118,21 @@ class TaskExecutor {
 
                     $this->results[] = $task;
 
+                    // At the end of the task execution, we update wait group
+                    $wg->done();
+
                 });
             }
+
+            // Wait for all tasks to complete
+            $wg->wait();
+
+            // We clean the Swoole table
+            $this->cleanAndGetResults();
+
+            $this->endTime = microtime(true);
+
         });
-
-        // We clean the Swoole table
-        $this->cleanAndGetResults();
-
-        $this->endTime = microtime(true);
     }
 
     /**

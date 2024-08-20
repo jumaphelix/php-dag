@@ -2,8 +2,8 @@
 
 namespace JumaPhelix\DAG;
 
-use  Swoole\Coroutine;
-use Swoole\Table;
+use  OpenSwoole\Coroutine;
+use OpenSwoole\Table;
 
 class TaskExecutor {
 

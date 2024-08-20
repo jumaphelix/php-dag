@@ -5,7 +5,8 @@
   "license": "MIT",
   "require": {
     "php": ">=8.0",
-    "ext-swoole": "*"
+    "ext-openswoole": "*",
+    "openswoole/core": "22.1.5"
   },
   "scripts": {
     "test": "vendor/bin/phpunit"

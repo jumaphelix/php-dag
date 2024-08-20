@@ -2,7 +2,7 @@
 
 namespace JumaPhelix\DAG;
 
-use Swoole\Lock;
+use OpenSwoole;
 
 class SharedDataManager {
 
@@ -10,7 +10,7 @@ class SharedDataManager {
     private $data;
 
     public function __construct(&$data) {
-        $this->lock = new \Swoole\Lock(SWOOLE_MUTEX);
+        $this->lock = new OpenSwoole\Lock(OpenSwoole\Constant::MUTEX);
         $this->data = &$data;
     }
 

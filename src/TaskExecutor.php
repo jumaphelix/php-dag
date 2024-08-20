@@ -2,7 +2,8 @@
 
 namespace JumaPhelix\DAG;
 
-use  OpenSwoole\Coroutine;
+use OpenSwoole\Coroutine as Co;
+use OpenSwoole\Core\Coroutine\WaitGroup;
 use OpenSwoole\Table;
 
 class TaskExecutor {
@@ -39,10 +40,10 @@ class TaskExecutor {
 
         $this->startTime = microtime(true);
 
-        Coroutine\run(function () {
+        co::run(function () {
 
             // A wait group to ensure we only return result after all tasks have completed
-            $wg = new Coroutine\WaitGroup();
+            $wg = new WaitGroup();
 
             // Get the sorted tasks
             $sortedTasks = $this->dag->topologicalSort();
@@ -64,7 +65,7 @@ class TaskExecutor {
                 $wg->add();
 
                 // Create a coroutine
-                Coroutine::create(function () use ($task, $parents, $taskId, $wg) {
+                co::create(function () use ($task, $parents, $taskId, $wg) {
 
                     $parentResults = [];
 
@@ -81,7 +82,7 @@ class TaskExecutor {
                                 $parentResults[$parentId] = unserialize($parentResultSerialized);
                             } else {
                                 // Implement a short delay to prevent a busy wait loop
-                                Coroutine::sleep(0.001); // Sleep for 1 millisecond
+                                co::sleep(0.001); // Sleep for 1 millisecond
                             }
                         }
 

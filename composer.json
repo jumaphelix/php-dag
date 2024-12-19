@@ -4,9 +4,7 @@
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": ">=8.0",
-    "ext-openswoole": "*",
-    "openswoole/core": "22.1.5"
+    "php": ">=8.0"
   },
   "scripts": {
     "test": "vendor/bin/phpunit"

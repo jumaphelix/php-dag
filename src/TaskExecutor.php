@@ -1,10 +1,6 @@
 <?php
 
 namespace JumaPhelix\DAG;
-//
-//use OpenSwoole\Coroutine as Co;
-//use OpenSwoole\Core\Coroutine\WaitGroup;
-//use OpenSwoole\Table;
 
 class TaskExecutor {
 
